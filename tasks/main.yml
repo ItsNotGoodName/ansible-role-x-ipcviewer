@@ -1,0 +1,90 @@
+# vim:ft=yaml.ansible
+---
+- name: Install
+  ansible.builtin.import_tasks: install.yml
+
+- name: Create user
+  ansible.builtin.user:
+    name: "{{ x_ipcviewer_user }}"
+    groups: audio,video
+    append: true
+  become: true
+  tags: x_ipcviewer
+
+- name: Install packages
+  ansible.builtin.apt:
+    name: "{{ x_ipcviewer_packages }}"
+    state: present
+  become: true
+  tags: x_ipcviewer
+
+- name: Install audio packages
+  ansible.builtin.apt:
+    name: "{{ x_ipcviewer_audio_packages }}"
+    state: present
+  become: true
+  tags: x_ipcviewer
+  when: x_ipcviewer_audio_enable | bool
+
+- name: Copy config
+  ansible.builtin.copy:
+    content: "{{ x_ipcviewer_config | to_nice_yaml }}"
+    dest: "{{ x_ipcviewer_home_dir }}/.x-ipcviewer.yml"
+    owner: "{{ x_ipcviewer_user }}"
+    group: "{{ x_ipcviewer_group }}"
+    mode: "0600"
+  become: true
+  tags: x_ipcviewer
+  when: x_ipcviewer_config is defined
+
+- name: Copy ~/.xinitrc
+  ansible.builtin.copy:
+    content: |
+      #!/bin/bash
+      [ -f /etc/xprofile ] && . /etc/xprofile
+      [ -f ~/.xprofile ] && . ~/.xprofile
+      exec x-ipcviewer --config-watch-exit
+    dest: "{{ x_ipcviewer_home_dir }}/.xinitrc"
+    owner: "{{ x_ipcviewer_user }}"
+    group: "{{ x_ipcviewer_group }}"
+    mode: "0755"
+  become: true
+  notify: restart x-ipcviewer
+  tags: x_ipcviewer
+
+- name: Copy ~/.xprofile
+  ansible.builtin.copy:
+    content: "{{ x_ipcviewer_xprofile_content }}"
+    dest: "{{ x_ipcviewer_home_dir }}/.xprofile"
+    owner: "{{ x_ipcviewer_user }}"
+    group: "{{ x_ipcviewer_group }}"
+    mode: "0755"
+  become: true
+  notify: restart x-ipcviewer
+  tags: x_ipcviewer
+
+- name: Template service
+  ansible.builtin.template:
+    src: service.j2
+    dest: /etc/systemd/system/x-ipcviewer@.service
+    owner: root
+    group: root
+    mode: "0644"
+  become: true
+  notify: restart x-ipcviewer
+  tags: x_ipcviewer
+
+- name: Enable service
+  ansible.builtin.systemd:
+    name: "x-ipcviewer@tty1"
+    enabled: true
+  become: true
+  tags: x_ipcviewer
+
+- name: Set systemd default target to graphical.target
+  ansible.builtin.file:
+    src: /lib/systemd/system/graphical.target
+    dest: /etc/systemd/system/default.target
+    state: link
+  become: true
+  tags: x_ipcviewer

@@ -1,0 +1,27 @@
+---
+x_ipcviewer_architectures:
+  arm64: arm64
+  armv7l: armv7
+  x86_64: x86_64
+x_ipcviewer_version: "{{ undef(hint='Specify version (e.g. 0.2.0)') }}"
+x_ipcviewer_url: "https://github.com/ItsNotGoodName/x-ipcviewer/releases/download/v{{ (x_ipcviewer_version == 'nightly') | ternary('', 'v') }}/x-ipcviewer_Linux_{{ x_ipcviewer_architectures[ansible_architecture] }}.tar.gz"
+# x_ipcviewer_checksum:
+x_ipcviewer_path: /usr/local/bin/x-ipcviewer
+
+x_ipcviewer_packages:
+  - xserver-xorg-core
+  - xinit
+  - mpv
+  - unclutter
+x_ipcviewer_audio_packages:
+  - pulseaudio
+
+x_ipcviewer_audio_enable: false
+
+x_ipcviewer_user: x-ipcviewer
+x_ipcviewer_group: "{{ x_ipcviewer_user }}"
+x_ipcviewer_home_dir: "/home/{{ x_ipcviewer_user }}"
+# x_ipcviewer_config:
+
+x_ipcviewer_xprofile_content: |
+  unclutter &
