@@ -4,7 +4,7 @@ x_ipcviewer_architectures:
   armv7l: armv7
   x86_64: x86_64
 x_ipcviewer_version: "{{ undef(hint='Specify version (e.g. 0.2.0)') }}"
-x_ipcviewer_url: "https://github.com/ItsNotGoodName/x-ipcviewer/releases/download/v{{ (x_ipcviewer_version == 'nightly') | ternary('', 'v') }}/x-ipcviewer_Linux_{{ x_ipcviewer_architectures[ansible_architecture] }}.tar.gz"
+x_ipcviewer_url: "https://github.com/ItsNotGoodName/x-ipcviewer/releases/download/{{ (x_ipcviewer_version == 'nightly') | ternary('nightly', 'v'+x_ipcviewer_version) }}/x-ipcviewer_Linux_{{ x_ipcviewer_architectures[ansible_architecture] }}.tar.gz"
 # x_ipcviewer_checksum:
 x_ipcviewer_path: /usr/local/bin/x-ipcviewer
 
